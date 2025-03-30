@@ -171,7 +171,7 @@ const platformThemes = {
             "#FFCDD2",
             "#EF9A9A",
             "#FFCDD2",
-            "#EF9A9A",
+            "#EF9A9A", 
             "#FFCDD2",
             "#EF9A9A",
             "#FFCDD2",
@@ -185,7 +185,10 @@ const platformThemes = {
         ],
         modePieMenusIfColorPush: "#66BB6A",
         modePieMenusElseColorPush: "#81C784",
-        wheelcolors: ["#757575", "#9E9E9E", "#757575", "#9E9E9E", "#616161"]
+        wheelcolors: ["#757575", "#9E9E9E", "#757575", "#9E9E9E", "#616161"],
+        typeWheelcolors: ["#4CAF50", "#66BB6A", "#4CAF50", "#66BB6A", "#4CAF50", "#66BB6A"],
+        instrumentWheelcolors: ["#00ACC1", "#26C6DA", "#00ACC1", "#26C6DA", "#00ACC1", "#26C6DA"],
+        instrumentWheelcolorspush: "#B2EBF2"
     },
     light: {
         textColor: "black",
@@ -343,7 +346,10 @@ const platformThemes = {
         ],
         modePieMenusIfColorPush: "#4b8b0e",
         modePieMenusElseColorPush: "#66a62d",
-        wheelcolors: ["#808080", "#909090", "#808080", "#909090", "#707070"]
+        wheelcolors: ["#808080", "#909090", "#808080", "#909090", "#707070"],
+        typeWheelcolors: ["#77c428", "#93e042", "#77c428", "#93e042", "#77c428", "#93e042"],
+        instrumentWheelcolors: ["#3ea4a3", "#60bfbc", "#3ea4a3", "#60bfbc", "#3ea4a3", "#60bfbc"],
+        instrumentWheelcolorspush: "#a5d8d7"
     },
     // custom: {Your styling},
 };

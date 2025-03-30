@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 
@@ -91,9 +90,20 @@
     <link rel="stylesheet" href="lib/materialize-iso.css" />
     <link rel="stylesheet" href="css/themes.css" />
 
+    <!-- Include D3.js library first and without defer -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+
     <script src="lib/easeljs.min.js" defer></script>
 
     <script src="lib/tweenjs.min.js" defer></script>
+
+    <!-- Load instrumentSelectorD3.js after D3 is loaded -->
+    <script src="js/utils/instrumentSelectorD3.js" defer></script>
+
+    <!-- Observable HQ styling for modern look -->
+    <style>
+        :root{--syntax_normal:#1b1e23;--syntax_comment:#a9b0bc;--syntax_number:#20a5ba;--syntax_keyword:#c30771;--syntax_atom:#10a778;--syntax_string:#008ec4;--syntax_error:#ffbedc;--syntax_unknown_variable:#838383;--syntax_known_variable:#005f87;--syntax_matchbracket:#20bbfc;--syntax_key:#6636b4;--mono_fonts:82%/1.5 Menlo,Consolas,monospace}.observablehq--collapsed,.observablehq--expanded,.observablehq--function,.observablehq--gray,.observablehq--import,.observablehq--string:after,.observablehq--string:before{color:var(--syntax_normal)}.observablehq--collapsed,.observablehq--inspect a{cursor:pointer}.observablehq--field{text-indent:-1em;margin-left:1em}.observablehq--empty{color:var(--syntax_comment)}.observablehq--blue,.observablehq--keyword{color:#3182bd}.observablehq--forbidden,.observablehq--pink{color:#e377c2}.observablehq--orange{color:#e6550d}.observablehq--boolean,.observablehq--null,.observablehq--undefined{color:var(--syntax_atom)}.observablehq--bigint,.observablehq--date,.observablehq--green,.observablehq--number,.observablehq--regexp,.observablehq--symbol{color:var(--syntax_number)}.observablehq--index,.observablehq--key{color:var(--syntax_key)}.observablehq--prototype-key{color:#aaa}.observablehq--empty{font-style:oblique}.observablehq--purple,.observablehq--string{color:var(--syntax_string)}.observablehq--error,.observablehq--red{color:#e7040f}.observablehq--inspect{font:var(--mono_fonts);overflow-x:auto;display:block;white-space:pre}.observablehq--error .observablehq--inspect{word-break:break-all;white-space:pre-wrap}
+    </style>
 
     <!-- <script src="js/widgets/musickeyboard.js"></script> -->
 
@@ -133,6 +143,87 @@
             doSearch();
         });
     </script>
+
+    <style>
+        /* Ensure the wheelDiv has a high z-index when visible */
+        #wheelDiv {
+            z-index: 1050 !important;
+            background-color: white !important;
+            border-radius: 50% !important;
+            overflow: hidden !important;
+            width: 500px !important;
+            height: 500px !important;
+            background-image: none !important;
+            font-family: var(--mono_fonts, "Menlo", "Consolas", monospace) !important;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1) !important;
+        }
+        
+        #wheelDiv:not([style*="display: none"]) {
+            box-shadow: 0 5px 30px rgba(0,0,0,0.15) !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            position: absolute !important;
+            display: block !important;
+        }
+        
+        /* Remove any background image from the wheelDiv */
+        #wheelDiv.wheelNav {
+            background-image: none !important;
+        }
+        
+        /* Style the SVG paths for better appearance */
+        #wheelDiv svg {
+            width: 100% !important;
+            height: 100% !important;
+            font-family: var(--mono_fonts, "Menlo", "Consolas", monospace) !important;
+        }
+        
+        #wheelDiv svg path {
+            transition: none !important; /* Remove transitions to let D3 handle them */
+        }
+        
+        #wheelDiv svg path:hover {
+            filter: brightness(1.1) saturate(1.2);
+            fill-opacity: 0.95 !important;
+        }
+        
+        /* Override any inline styles that might hide the wheel */
+        #wheelDiv[style*="visibility: hidden"] {
+            visibility: visible !important;
+        }
+        
+        /* Enhance text readability */
+        #wheelDiv svg text {
+            font-weight: 600;
+            font-size: 11px;
+            fill: #1b1e23;
+            text-shadow: 0 0 1px rgba(255,255,255,0.7);
+        }
+        
+        /* Additional styles for D3 sunburst visualization */
+        #wheelDiv svg circle {
+            fill: white;
+            cursor: pointer;
+        }
+        
+        #wheelDiv svg circle:hover {
+            filter: brightness(0.98);
+        }
+        
+        /* Observable HQ inspired button styles */
+        #wheelDiv button {
+            border: 1px solid #e0e0e0 !important;
+            background: white !important;
+            border-radius: 4px !important;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1) !important;
+            transition: all 0.2s ease !important;
+        }
+        
+        #wheelDiv button:hover {
+            background: #f7f7f7 !important;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important;
+        }
+    </style>
 </head>
 
 <!-- #96D3F3-->
@@ -415,8 +506,7 @@
 
         <div id="helpElem" tabindex="-1"></div>
 
-        <div id="wheelDiv" class="wheelNav" style="background-size: contain;background-image: url(./images/gray.svg)"
-            tabindex="-1"></div>
+        <div id="wheelDiv" class="wheelNav" style="background-image: none;" tabindex="-1"></div>
 
         <div id="wheelDiv2" class="wheelNav"
             style="background-size: contain;background-image: url(./images/gray.svg);visibility: hidden" tabindex="-1">
@@ -593,7 +683,7 @@
                                     id="menu"
                                     class="animated-icon material-icons md-48 "
                                     >menu</i
-                                ></a>
+                                ></a
                         </li>
                         <li>
                             <a

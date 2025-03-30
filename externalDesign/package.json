@@ -1,0 +1,14 @@
+{
+  "name": "8a4f9b31c4437f1d",
+  "main": "8a4f9b31c4437f1d@385.js",
+  "version": "385.0.0",
+  "homepage": "https://observablehq.com/d/8a4f9b31c4437f1d",
+  "author": {
+    "name": "start",
+    "url": "https://observablehq.com/@start5"
+  },
+  "type": "module",
+  "peerDependencies": {
+    "@observablehq/runtime": "4 - 5"
+  }
+}

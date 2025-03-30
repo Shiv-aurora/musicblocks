@@ -57,7 +57,7 @@
    piemenuModes, piemenuPitches, piemenuCustomNotes, piemenuGrid,
    piemenuBlockContext, piemenuIntervals, piemenuVoices, piemenuBoolean,
    piemenuBasic, piemenuColor, piemenuNumber, piemenuNthModalPitch,
-   piemenuNoteValue, piemenuAccidentals, piemenuKey, piemenuChords
+   piemenuNoteValue, piemenuAccidentals, piemenuKey, piemenuChords, piemenuInstruments
 */
 
 const setWheelSize = (i) => {
@@ -478,7 +478,7 @@ const piemenuPitches = (
         }
 
         that.activity.logo.synth.setMasterVolume(PREVIEWVOLUME);
-        Singer.setSynthVolume(that.activity.logo, 0, DEFAULTVOICE, PREVIEWVOLUME);
+        Singer.setSynthVolume(that.activity, 0, DEFAULTVOICE, PREVIEWVOLUME);
 
         if (!that._triggerLock) {
             that._triggerLock = true;
@@ -3933,5 +3933,254 @@ const piemenuKey = (activity) => {
     const j = modes.indexOf(activity.KeySignatureEnv[1]);
     if (j !== -1) {
         modenameWheel.navigateWheel(j);
+    }
+};
+
+/**
+ * Creates dual-layer pie menu for selecting instruments
+ * @param {object} activity - The activity object.
+ * @param {object} block - The block object.
+ * @returns {void}
+ */
+const piemenuInstruments = (activity, block) => {
+    // Define instrument categories and their instruments
+    const instrumentTypes = ["string", "wind", "percussion", "keyboard", "voice", "electronic"];
+    const instrumentsByType = {
+        string: ["violin", "viola", "cello", "bass", "guitar", "acoustic guitar", "ukulele", "banjo", "sitar"],
+        wind: ["flute", "clarinet", "saxophone", "trumpet", "trombone", "tuba", "oboe", "bassoon"],
+        percussion: ["snare drum", "bass drum", "tom-tom", "kick drum", "hi-hat", "ride cymbal", "crash cymbal", "maracas", "tambourine", "cowbell", "triangle", "woodblock", "gong", "vibraphone", "xylophone", "marimba"],
+        keyboard: ["piano", "harpsichord", "organ", "accordion", "synthesizer"],
+        voice: ["soprano", "alto", "tenor", "bass"],
+        electronic: ["electric guitar", "electronic synth", "sine", "square", "sawtooth", "triangle wave", "kick drum", "snare drum", "hi-hat", "tom-tom"]
+    };
+
+    // Return immediately if stage click
+    if (block.blocks.stageClick) {
+        return;
+    }
+
+    // If the selected value is present, determine its category
+    const selectedInstrument = (block.value === null || block.value === undefined) ? "piano" : block.value;
+    
+    let currentCategory = "keyboard"; // Default category
+    for (const type in instrumentsByType) {
+        if (instrumentsByType[type].includes(selectedInstrument)) {
+            currentCategory = type;
+            break;
+        }
+    }
+    
+    // Clear and prepare the wheel div
+    docById("wheelDiv").style.display = "";
+    
+    // Create wheel objects
+    block._typeWheel = new wheelnav("wheelDiv", null, 600, 600);
+    block._instrumentWheel = new wheelnav("_instrumentWheel", block._typeWheel.raphael);
+    block._exitWheel = new wheelnav("_exitWheel", block._typeWheel.raphael);
+
+    // Set up wheel navigation properties
+    wheelnav.cssMode = true;
+    block._typeWheel.keynavigateEnabled = false;
+    block._typeWheel.clickModeRotate = false;
+    
+    // Configure the type wheel (inner)
+    block._typeWheel.colors = platformColor.typeWheelcolors;
+    block._typeWheel.slicePathFunction = slicePath().DonutSlice;
+    block._typeWheel.slicePathCustom = slicePath().DonutSliceCustomization();
+    block._typeWheel.slicePathCustom.minRadiusPercent = 0.2;
+    block._typeWheel.slicePathCustom.maxRadiusPercent = 0.5;
+    block._typeWheel.sliceSelectedPathCustom = block._typeWheel.slicePathCustom;
+    block._typeWheel.sliceInitPathCustom = block._typeWheel.slicePathCustom;
+    block._typeWheel.animatetime = 0;
+    
+    // Create the inner wheel with instrument types
+    const typeLabels = [];
+    for (let i = 0; i < instrumentTypes.length; i++) {
+        typeLabels.push(_(instrumentTypes[i]));
+    }
+    block._typeWheel.createWheel(typeLabels);
+    
+    // Configure exit button
+    block._exitWheel.colors = platformColor.exitWheelcolors;
+    block._exitWheel.slicePathFunction = slicePath().DonutSlice;
+    block._exitWheel.slicePathCustom = slicePath().DonutSliceCustomization();
+    block._exitWheel.slicePathCustom.minRadiusPercent = 0.0;
+    block._exitWheel.slicePathCustom.maxRadiusPercent = 0.2;
+    block._exitWheel.sliceSelectedPathCustom = block._exitWheel.slicePathCustom;
+    block._exitWheel.sliceInitPathCustom = block._exitWheel.slicePathCustom;
+    block._exitWheel.clickModeRotate = false;
+    block._exitWheel.initWheel(["×", " "]);
+    block._exitWheel.navItems[1].enabled = false;
+    block._exitWheel.navItems[0].sliceSelectedAttr.cursor = "pointer";
+    block._exitWheel.navItems[0].sliceHoverAttr.cursor = "pointer";
+    block._exitWheel.navItems[0].titleSelectedAttr.cursor = "pointer";
+    block._exitWheel.navItems[0].titleHoverAttr.cursor = "pointer";
+    block._exitWheel.createWheel();
+
+    // Set up event handlers
+    const that = block;
+
+    // Configure the instrument wheel
+    block._instrumentWheel.colors = platformColor.instrumentWheelcolors;
+    block._instrumentWheel.slicePathFunction = slicePath().DonutSlice;
+    block._instrumentWheel.slicePathCustom = slicePath().DonutSliceCustomization();
+    block._instrumentWheel.slicePathCustom.minRadiusPercent = 0.5;
+    block._instrumentWheel.slicePathCustom.maxRadiusPercent = 0.85;
+    block._instrumentWheel.sliceSelectedPathCustom = block._instrumentWheel.slicePathCustom;
+    block._instrumentWheel.sliceInitPathCustom = block._instrumentWheel.slicePathCustom;
+    block._instrumentWheel.animatetime = 0;
+    block._instrumentWheel.clickModeRotate = false;
+    
+    // Function to preview instrument sound
+    const __instrumentPreview = (instrumentName) => {
+        const tur = that.activity.turtles.ithTurtle(0);
+        if (
+            tur.singer.instrumentNames.length === 0 ||
+            !tur.singer.instrumentNames.includes(instrumentName)
+        ) {
+            tur.singer.instrumentNames.push(instrumentName);
+            that.activity.logo.synth.createDefaultSynth(0);
+            that.activity.logo.synth.loadSynth(0, instrumentName);
+        }
+        
+        that.activity.logo.synth.setMasterVolume(PREVIEWVOLUME);
+        Singer.setSynthVolume(that.activity.logo, 0, instrumentName, PREVIEWVOLUME);
+        
+        if (!that._triggerLock) {
+            that._triggerLock = true;
+            that.activity.logo.synth.trigger(0, ['C4'], 1/4, instrumentName, null, null);
+            
+            setTimeout(() => {
+                that._triggerLock = false;
+            }, 500);
+        }
+    };
+    
+    // When an instrument is selected
+    const __selectionChangedInstrument = (instrumentName) => {
+        that.value = instrumentName;
+        that.text.text = instrumentName;
+        
+        // Make sure text is on top
+        that.container.setChildIndex(that.text, that.container.children.length - 1);
+        that.updateCache();
+        
+        // Preview the instrument
+        __instrumentPreview(instrumentName);
+    };
+    
+    // When a type is selected
+    const __selectionChangedType = () => {
+        const selectedType = that._typeWheel.navItems[that._typeWheel.selectedNavItemIndex].title;
+        console.log("Instrument type selected:", selectedType);
+        
+        // Get instruments for this type
+        const category = instrumentTypes.find(type => _(type) === selectedType);
+        if (!category) {
+            console.error("Could not find matching category for", selectedType);
+            return;
+        }
+        
+        const instruments = instrumentsByType[category];
+        console.log("Instruments for category", category, ":", instruments);
+        
+        // Prepare labels for the instrument wheel
+        const instrumentLabels = [];
+        for (let i = 0; i < instruments.length; i++) {
+            instrumentLabels.push(_(instruments[i]));
+        }
+        
+        // Add padding for smaller categories
+        const minItems = 8;
+        if (instrumentLabels.length < minItems) {
+            for (let i = 0; i < minItems - instrumentLabels.length; i++) {
+                instrumentLabels.push(null);
+                block._instrumentWheel.colors.push(platformColor.instrumentWheelcolorspush);
+            }
+        }
+        
+        // Create the instrument wheel
+        block._instrumentWheel.createWheel(instrumentLabels);
+        
+        // Set the handlers for instrument selection
+        for (let i = 0; i < instruments.length; i++) {
+            if (block._instrumentWheel.navItems[i]) {
+                block._instrumentWheel.navItems[i].navigateFunction = () => {
+                    __selectionChangedInstrument(instruments[i]);
+                };
+            }
+        }
+    };
+    
+    // Exit function
+    const __exitMenu = () => {
+        that._piemenuExitTime = new Date().getTime();
+        docById("wheelDiv").style.display = "none";
+        if (that._typeWheel) {
+            that._typeWheel.removeWheel();
+            that._typeWheel = null;
+        }
+        if (that._instrumentWheel) {
+            that._instrumentWheel.removeWheel();
+            that._instrumentWheel = null;
+        }
+        if (that._exitWheel) {
+            that._exitWheel.removeWheel();
+            that._exitWheel = null;
+        }
+    };
+    
+    // Set type wheel navigation functions
+    for (let i = 0; i < typeLabels.length; i++) {
+        block._typeWheel.navItems[i].navigateFunction = __selectionChangedType;
+    }
+    
+    // Set exit button handler
+    block._exitWheel.navItems[0].navigateFunction = __exitMenu;
+    
+    // Position the widget over the note block
+    const x = block.container.x;
+    const y = block.container.y;
+
+    const canvasLeft = block.activity.canvas.offsetLeft + 28 * block.blocks.blockScale;
+    const canvasTop = block.activity.canvas.offsetTop + 6 * block.blocks.blockScale;
+
+    docById("wheelDiv").style.position = "absolute";
+    setWheelSize(300);
+    docById("wheelDiv").style.left =
+        Math.min(
+            block.blocks.turtles._canvas.width - 300,
+            Math.max(
+                0,
+                Math.round(
+                    (x + block.activity.blocksContainer.x) * block.activity.getStageScale() + canvasLeft
+                ) - 200
+            )
+        ) + "px";
+    docById("wheelDiv").style.top =
+        Math.min(
+            block.blocks.turtles._canvas.height - 350,
+            Math.max(
+                0,
+                Math.round(
+                    (y + block.activity.blocksContainer.y) * block.activity.getStageScale() + canvasTop
+                ) - 200
+            )
+        ) + "px";
+    
+    // Navigate to current category
+    const typeIndex = instrumentTypes.indexOf(currentCategory);
+    if (typeIndex !== -1) {
+        block._typeWheel.navigateWheel(typeIndex);
+    }
+    
+    // Initial selection - update instrument wheel based on current category
+    __selectionChangedType();
+    
+    // If there's a selected instrument, navigate to it
+    const instruments = instrumentsByType[currentCategory];
+    const instrumentIndex = instruments.indexOf(selectedInstrument);
+    if (instrumentIndex !== -1) {
+        block._instrumentWheel.navigateWheel(instrumentIndex);
     }
 };

@@ -34,7 +34,7 @@
    safeSVG, SCALENOTES, SHARP, SOLFATTRS, SOLFNOTES, splitScaleDegree,
    splitSolfege, STANDARDBLOCKHEIGHT, TEXTX, TEXTY,
    topBlock, updateTemperaments, VALUETEXTX, DEFAULTCHORD,
-   VOICENAMES, WESTERN2EISOLFEGENAMES, _THIS_IS_TURTLE_BLOCKS_
+   VOICENAMES, WESTERN2EISOLFEGENAMES, _THIS_IS_TURTLE_BLOCKS_, piemenuInstruments
  */
 
 /*
@@ -66,7 +66,7 @@
    - js/piemenus.js
         piemenuNumber, piemenuColor, piemenuNoteValue, piemenuBasic, piemenuBoolean, piemenuVoices,
         piemenuIntervals, piemenuAccidentals, piemenuModes, piemenuPitches, piemenuCustomNotes,
-        piemenuBlockContext
+        piemenuBlockContext, piemenuChords, piemenuInstruments
    - js/utils/platformstyle.js
         platformColor
  */
@@ -2777,14 +2777,97 @@ class Block {
          * @param {Event} event - The click event.
          */
         this.container.on("click", (event) => {
+            // Check if this is a special input block like 'voicename'
+            if (SPECIALINPUTS.indexOf(that.name) !== -1) {
+                console.log("Special input block clicked: " + that.name);
+                
+                // If it's a voicename block, ensure the instrument selector shows
+                if (that.name === "voicename") {
+                    console.log("Voicename block clicked - calling D3 selector directly");
+                    
+                    // Get the wheel div first to see if it's already visible
+                    const wheelDiv = docById("wheelDiv");
+                    if (wheelDiv) {
+                        console.log("Current wheelDiv display state:", wheelDiv.style.display);
+                        
+                        // Make sure it's visible
+                        wheelDiv.style.display = "";
+                    } else {
+                        console.error("wheelDiv not found in DOM");
+                    }
+                    
+                    // Call _changeLabel directly to display the instrument selector
+                    that._changeLabel();
+                    
+                    // Check if the wheel is now visible
+                    if (wheelDiv) {
+                        console.log("wheelDiv display state after _changeLabel:", wheelDiv.style.display);
+                    }
+                    
+                    // We need to handle the event to prevent other handlers from running
+                    event.stopPropagation();
+                }
+            }
+            
+            // If we've generated multiple click events, only process the first one.
+            if (that.blocks.multiClick.count > 0 && that.blocks.multiClick.count < DOUBLE) {
+                return;
+            }
+
+            // We might still execute click code when pressMove has occurred.
+            // So only continue if activeBlock is null or matches this block.
+            if (
+                that.blocks.activeBlock !== null &&
+                that.blocks.activeBlock !== that.blocks.blockList.indexOf(that)
+            ) {
+                return;
+            }
+
+            that.blocks.activeBlock = null;
+
+            if (that.blocks.isLongPressProcess) {
+                return;
+            }
+
+            // Every block has a container, but there are lots of "that"s.
+            that.blocks.unhighlight();
+            that.blocks.highlight(thisBlock, true);
+            that.blocks.unhighlightAll();
+            that.blocks.highlightSelected();
+
+            if (that.name !== "rest2") {
+                that.blocks.hide();
+            }
+
+            // If the piemenu was open, close it.
+            // If the value block is in the collapsible, make the menu for "advanced" options
+            // e.g. in the cascading menus.
+            // if (piemenuPalettes) {
+            if (that.blocks.activeBlock === null) {
+                piemenuPalettes.show(thisBlock);
+            }
+            // } else {
+            //     that.blocks.showPalettePopOver();
+            // }
+
             if(docById("helpfulWheelDiv") && docById("helpfulWheelDiv").style.display !== "none") {
                 docById("helpfulWheelDiv").style.display = "none";
             }
+            
+            // If a wheel is already visible, let that wheel handle the clicks
+            if (docById("wheelDiv").style.display !== "none") {
+                event.stopPropagation();
+                return;
+            }
+            
             // We might be able to check which button was clicked.
             if ("nativeEvent" in event) {
                 if ("button" in event.nativeEvent && event.nativeEvent.button == 2) {
                     that.blocks.stageClick = true;
-                    docById("wheelDiv").style.display = "none";
+                    // Only hide wheel if this isn't a special input block
+                    if (!SPECIALINPUTS.includes(that.name)) {
+                        docById("wheelDiv").style.display = "none";
+                    }
                     that.blocks.activeBlock = thisBlock;
                     piemenuBlockContext(that);
                     return;
@@ -2839,7 +2922,20 @@ class Block {
                         if (that._triggerLongPress) {
                             that._triggerLongPress = false;
                         } else {
+                            // If the wheel div is already visible, let it handle the click
+                            if (docById("wheelDiv").style.display !== "none") {
+                                event.stopPropagation();
+                                return;
+                            }
+                            
+                            // Show the change label interface
                             that._changeLabel();
+                            
+                            // Set a flag to prevent clicks immediately after opening the wheel
+                            that._wheelJustOpened = true;
+                            setTimeout(() => {
+                                that._wheelJustOpened = false;
+                            }, 500);
                         }
                     }
                 } else {
@@ -2884,6 +2980,12 @@ class Block {
          */
         this.container.on("mousedown", (event) =>{
             docById("contextWheelDiv").style.display = "none";
+
+            // If a wheel is visible, don't process this mousedown event
+            if (docById("wheelDiv").style.display !== "none") {
+                event.stopPropagation();
+                return;
+            }
 
             // Track time for detecting long pause...
             that.blocks.mouseDownTime = new Date().getTime();
@@ -2946,6 +3048,26 @@ class Block {
             // Don't allow silence block to be dragged out of a note.
             if (that.name === "rest2") {
                 return;
+            }
+
+            // If the wheel is visible, don't allow dragging at all, especially for special inputs
+            if (docById("wheelDiv").style.display !== "none") {
+                return;
+            }
+
+            // Check if this is a special input block that should prefer showing a pie menu over dragging
+            // This prevents accidental dragging when trying to click on blocks like voicename
+            if (SPECIALINPUTS.includes(that.name) && !that.trash) {
+                // If the pie menu was recently shown, don't allow dragging
+                if (that._piemenuExitTime && new Date().getTime() - that._piemenuExitTime < 1000) {
+                    return;
+                }
+                
+                // If we've barely moved, don't start dragging yet (require more movement for special inputs)
+                if (Math.abs(event.stageX / that.activity.getStageScale() - that.original.x) < 10 &&
+                    Math.abs(event.stageY / that.activity.getStageScale() - that.original.y) < 10) {
+                    return;
+                }
             }
 
             // Do not allow a vspace block attached to a silence block to be dragged out of a note.
@@ -3661,39 +3783,61 @@ class Block {
 
             piemenuBasic(this, oscLabels, oscValues, selectedType, platformColor.piemenuBasic);
         } else if (this.name === "voicename") {
+            console.log("Voicename block clicked");
+            
             if (this.value != null) {
                 selectedVoice = this.value;
             } else {
                 selectedVoice = DEFAULTVOICE;
             }
 
-            const voiceLabels = [];
-            const voiceValues = [];
-            const categories = [];
-            const categoriesList = [];
-            for (let i = 0; i < VOICENAMES.length; i++) {
-                // Skip custom voice in Beginner Mode.
-                if (this.activity.beginnerMode && VOICENAMES[i][1] === "custom") {
-                    continue;
-                }
-
-                const label = _(VOICENAMES[i][1]);
-                if (getTextWidth(label, "bold 30pt Sans") > 400) {
-                    voiceLabels.push(label.substr(0, 8) + "...");
-                } else {
-                    voiceLabels.push(label);
-                }
-
-                voiceValues.push(VOICENAMES[i][1]);
-
-                if (!categoriesList.includes(VOICENAMES[i][3])) {
-                    categoriesList.push(VOICENAMES[i][3]);
-                }
-
-                categories.push(categoriesList.indexOf(VOICENAMES[i][3]));
+            // Check if wheelDiv exists and its current display state
+            const wheelDiv = docById("wheelDiv");
+            if (wheelDiv) {
+                console.log("wheelDiv current display:", wheelDiv.style.display);
+                // Ensure wheelDiv is visible
+                wheelDiv.style.display = "";
             }
 
-            piemenuVoices(this, voiceLabels, voiceValues, categories, selectedVoice);
+            // Use our new D3-based instrument selector instead of the pie menu
+            instrumentSelectorD3(this.activity, this);
+            
+            // Check if the wheel is displayed after calling instrumentSelectorD3
+            if (wheelDiv) {
+                console.log("wheelDiv display after calling instrumentSelectorD3:", wheelDiv.style.display);
+                
+                // Add a mutation observer to ensure wheelDiv remains visible during interactions
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            // If display is being set to none and we didn't just exit via the exit function
+                            if (wheelDiv.style.display === 'none' && 
+                                (!this._piemenuExitTime || new Date().getTime() - this._piemenuExitTime > 500)) {
+                                // Reset display to visible
+                                console.log('Wheel was hidden - restoring visibility');
+                                wheelDiv.style.display = '';
+                            }
+                        }
+                    });
+                });
+                
+                // Start observing style changes
+                observer.observe(wheelDiv, { attributes: true, attributeFilter: ['style'] });
+                
+                // Store observer reference to disconnect later
+                this._wheelObserver = observer;
+                
+                // Disconnect after a reasonable time to prevent memory leaks
+                setTimeout(() => {
+                    if (this._wheelObserver) {
+                        this._wheelObserver.disconnect();
+                        this._wheelObserver = null;
+                    }
+                }, 10000); // 10 seconds should be plenty
+                
+                // Make sure the wheel is currently visible
+                wheelDiv.style.display = '';
+            }
         } else if (this.name === "noisename") {
             if (this.value != null) {
                 selectedNoise = this.value;
@@ -3723,6 +3867,62 @@ class Block {
             }
 
             piemenuVoices(this, noiseLabels, noiseValues, categories, selectedNoise, 90);
+        } else if (this.name === "settimbre") {
+            console.log("Set Instrument block clicked");
+            
+            if (this.value != null) {
+                selectedVoice = this.value;
+            } else {
+                selectedVoice = DEFAULTVOICE;
+            }
+
+            // Check if wheelDiv exists and its current display state
+            const wheelDiv = docById("wheelDiv");
+            if (wheelDiv) {
+                console.log("wheelDiv current display:", wheelDiv.style.display);
+                // Ensure wheelDiv is visible
+                wheelDiv.style.display = "";
+            }
+
+            // Use our D3-based instrument selector
+            instrumentSelectorD3(this.activity, this);
+            
+            // Check if the wheel is displayed after calling instrumentSelectorD3
+            if (wheelDiv) {
+                console.log("wheelDiv display after calling instrumentSelectorD3:", wheelDiv.style.display);
+                
+                // Add a mutation observer to ensure wheelDiv remains visible during interactions
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                            // If display is being set to none and we didn't just exit via the exit function
+                            if (wheelDiv.style.display === 'none' && 
+                                (!this._piemenuExitTime || new Date().getTime() - this._piemenuExitTime > 500)) {
+                                // Reset display to visible
+                                console.log('Wheel was hidden - restoring visibility');
+                                wheelDiv.style.display = '';
+                            }
+                        }
+                    });
+                });
+                
+                // Start observing style changes
+                observer.observe(wheelDiv, { attributes: true, attributeFilter: ['style'] });
+                
+                // Store observer reference to disconnect later
+                this._wheelObserver = observer;
+                
+                // Disconnect after a reasonable time to prevent memory leaks
+                setTimeout(() => {
+                    if (this._wheelObserver) {
+                        this._wheelObserver.disconnect();
+                        this._wheelObserver = null;
+                    }
+                }, 10000); // 10 seconds should be plenty
+                
+                // Make sure the wheel is currently visible
+                wheelDiv.style.display = '';
+            }
         } else if (this.name === "temperamentname") {
             if (this.value != null) {
                 selectedTemperament = this.value;

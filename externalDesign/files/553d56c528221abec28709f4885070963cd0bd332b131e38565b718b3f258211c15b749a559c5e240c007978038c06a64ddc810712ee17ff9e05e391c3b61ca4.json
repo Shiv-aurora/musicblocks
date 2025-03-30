@@ -1,0 +1,54 @@
+{
+    "name": "Instruments",
+    "children": [
+      {
+        "name": "String",
+        "children": [
+          { "name": "Violin", "value": 1 },
+          { "name": "Viola", "value": 1 },
+          { "name": "Cello", "value": 1 },
+          { "name": "Bass", "value": 1 }
+        ]
+      },
+      {
+        "name": "Wind",
+        "children": [
+          { "name": "Flute", "value": 1 },
+          { "name": "Clarinet", "value": 1 },
+          { "name": "Saxophone", "value": 1 }
+        ]
+      },
+      {
+        "name": "Percussion",
+        "children": [
+          { "name": "Snare Drum", "value": 1 },
+          { "name": "Bass Drum", "value": 1 },
+          { "name": "Cymbals", "value": 1 }
+        ]
+      },
+      {
+        "name": "Keyboard",
+        "children": [
+          { "name": "Piano", "value": 1 },
+          { "name": "Organ", "value": 1 },
+          { "name": "Synthesizer", "value": 1 }
+        ]
+      },
+      {
+        "name": "Voice",
+        "children": [
+          { "name": "Soprano", "value": 1 },
+          { "name": "Tenor", "value": 1 },
+          { "name": "Bass", "value": 1 }
+        ]
+      },
+      {
+        "name": "Electronic",
+        "children": [
+          { "name": "Electric Guitar", "value": 1 },
+          { "name": "Synth", "value": 1 }
+        ]
+      }
+    ]
+  }
+  
