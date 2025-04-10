@@ -3133,7 +3133,7 @@ class Block {
                 return;
             }
             
-            // Note: D3 selector blocks have their own separate event handlers
+            // CRITICAL: Always prevent dragging for D3 selector blocks - no exceptions
             if (that._usesD3Selector()) {
                 console.log("Preventing all dragging for D3 selector block:", that.name);
                 // Completely block dragging for these blocks
@@ -3911,22 +3911,11 @@ class Block {
      * @returns {boolean} - True if the block uses D3 selector, false for wheelnav or no selector
      */
     _usesD3Selector() {
-        // Define blocks that should use D3-based selectors instead of pie menus
-        // These are blocks that need a modern UI with more options
         const d3SelectorBlocks = [
-            "voicename",
-            "pitch",
-            "customNote", 
-            "solfege", 
-            "notename", 
-            "eastindiansolfege", 
-            "scaledegree2",
-            "drumname", 
-            "effectsname", 
-            "noisename", 
-            "settimbre"
+            "voicename", "pitch", "customNote", "solfege", 
+            "notename", "eastindiansolfege", "scaledegree2",
+            "drumname", "effectsname", "noisename", "settimbre"
         ];
-        
         return d3SelectorBlocks.includes(this.name);
     }
 
@@ -3961,332 +3950,75 @@ class Block {
      * @private
      */
     _showSelector() {
-        // If we are showing a selector, we want the associated event
-        // handler to ignore the mouse up event that happens when
-        // a slider is dragged. Same for the pitch selector.
-        this.blocks.mouseDownOnBlock = null;
-
-        if (this.blocks.activeBlock === null) {
-            return;
-        }
-
+        console.log("Showing D3 selector for block:", this.name);
+        
+        // Make sure the wheel is visible
         const wheelDiv = docById("wheelDiv");
-        if (wheelDiv === null) {
-            console.log("wheelDiv is null");
-            return;
+        if (wheelDiv) {
+            wheelDiv.style.display = "";
         }
-
-        // Check if this is a type of block that uses a custom D3 selector
-        if (this._usesD3Selector()) {
-            console.log("Using D3 selector for", this.name);
+        
+        // Call the appropriate selector based on block type
+        if (this.name === "pitch" || this.name === "customNote" || 
+            this.name === "solfege" || this.name === "notename" || 
+            this.name === "eastindiansolfege" || this.name === "scaledegree2") {
             
-            // Don't try to show the selector twice
-            if (wheelDiv.style.display === "block") {
-                return;
-            }
-            
-            // Position and show the wheel div
-            wheelDiv.style.display = "block";
-            
-            // Load the appropriate D3 selector
-            if (this.name === "pitch" || this.name === "customNote" || 
-                this.name === "solfege" || this.name === "notename" || 
-                this.name === "eastindiansolfege" || this.name === "scaledegree2") {
-                
-                console.log("Loading pitch selector for", this.name);
-                // Import the D3 selector if not already loaded
-                if (typeof window.pitchSelectorD3 === 'undefined') {
-                    console.log("Loading pitch selector D3");
-                    const script = document.createElement('script');
-                    script.src = 'js/utils/pitchSelectorD3.js';
-                    document.head.appendChild(script);
-                    
-                    // Wait for the script to load
-                    script.onload = () => {
-                        if (typeof window.pitchSelectorD3 === 'function') {
-                            window.pitchSelectorD3(this.blocks.activity, this);
-                        } else {
-                            console.error("Failed to load pitchSelectorD3 function");
-                            this._createSimplePlaceholder(wheelDiv, "Pitch Selector");
-                        }
-                    };
-                    
-                    // Add error handler
-                    script.onerror = () => {
-                        console.error("Error loading pitchSelectorD3 script");
-                        this._createSimplePlaceholder(wheelDiv, "Pitch Selector");
-                    };
-                } else {
-                    // Call the selector function directly
-                    try {
-                        window.pitchSelectorD3(this.blocks.activity, this);
-                    } catch (e) {
-                        console.error("Error calling pitchSelectorD3:", e);
-                        this._createSimplePlaceholder(wheelDiv, "Pitch Selector");
-                    }
-                }
-            } else if (this.name === "voicename" || this.name === "drumname" || 
-                this.name === "effectsname" || this.name === "noisename" || 
-                this.name === "settimbre") {
-                // Prepare the wheel div for the instrument selector
-                if (typeof window.instrumentSelectorD3 === 'undefined') {
-                    console.log("Loading instrument selector D3");
-                    const script = document.createElement('script');
-                    script.src = 'js/utils/instrumentSelectorD3.js';
-                    document.head.appendChild(script);
-                    
-                    // Wait for the script to load
-                    script.onload = () => {
-                        if (typeof window.instrumentSelectorD3 === 'function') {
-                            window.instrumentSelectorD3(this.blocks.activity, this);
-                        } else {
-                            console.error("Failed to load instrumentSelectorD3 function");
-                            this._createSimplePlaceholder(wheelDiv, "Instrument Selector");
-                        }
-                    };
-                    
-                    // Add error handler
-                    script.onerror = () => {
-                        console.error("Error loading instrumentSelectorD3 script");
-                        this._createSimplePlaceholder(wheelDiv, "Instrument Selector");
-                    };
-                } else {
-                    // Call the selector function directly
-                    try {
-                        window.instrumentSelectorD3(this.blocks.activity, this);
-                    } catch (e) {
-                        console.error("Error calling instrumentSelectorD3:", e);
-                        this._createSimplePlaceholder(wheelDiv, "Instrument Selector");
-                    }
-                }
+            console.log("Showing pitch selector for", this.name);
+            // Safety check to make sure the function is defined
+            if (typeof pitchSelectorD3 === 'function') {
+                pitchSelectorD3(this.activity, this, true);
+            } else if (window.pitchSelectorD3) {
+                window.pitchSelectorD3(this.activity, this, true);
             } else {
-                // Use the simple placeholder for other blocks
-                this._createSimplePlaceholder(wheelDiv, `${this.name} Selector`);
+                console.error("pitchSelectorD3 function not defined!");
             }
+        } else if (this.name === "voicename" || this.name === "drumname" || 
+                 this.name === "effectsname" || this.name === "noisename" || 
+                 this.name === "settimbre") {
             
-            return;
-        }
-        
-        // For non-D3 selectors, use the traditional wheelnav approach
-        // ... existing code ...
-    }
-    
-    /**
-     * Creates a simple placeholder wheel if the real selector fails to load
-     * @private
-     * @param {HTMLElement} wheelDiv - The wheel div to populate
-     * @param {string} title - The title to display
-     */
-    _createSimplePlaceholder(wheelDiv, title) {
-        if (!wheelDiv) return;
-        
-        // Create a two-layer sunburst like the pitch selector
-        const svgNS = "http://www.w3.org/2000/svg";
-        const svg = document.createElementNS(svgNS, "svg");
-        svg.setAttribute("width", "100%");
-        svg.setAttribute("height", "100%");
-        svg.setAttribute("viewBox", "0 0 500 500");
-        
-        // Add a title
-        const titleText = document.createElementNS(svgNS, "text");
-        titleText.setAttribute("x", "250");
-        titleText.setAttribute("y", "30");
-        titleText.setAttribute("text-anchor", "middle");
-        titleText.setAttribute("font-size", "20");
-        titleText.setAttribute("font-weight", "bold");
-        titleText.textContent = title;
-        svg.appendChild(titleText);
-        
-        const centerX = 250;
-        const centerY = 250;
-        const innerRadius = 100;  // Inner ring radius
-        const outerRadius = 200;  // Outer ring radius
-        
-        // Create data for the two rings
-        let innerItems, outerItems, innerColors, outerColors;
-        
-        if (title === "Pitch Selector") {
-            // For pitch selector: notes in inner ring, accidentals and octave in outer
-            innerItems = ["C", "D", "E", "F", "G", "A", "B"];
-            innerColors = ["#90EE90", "#90EE90", "#90EE90", "#90EE90", "#90EE90", "#90EE90", "#90EE90"]; // All light green
-            
-            // Accidentals and octave numbers for outer ring
-            outerItems = ["♮", "♯", "♭", "𝄪", "𝄫", "1", "2", "3", "4", "5", "6", "7", "8"];
-            outerColors = [
-                "#ADFF2F", "#ADFF2F", "#ADFF2F", "#ADFF2F", "#ADFF2F", // Accidentals in light green 
-                "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1" // Octaves in light pink
-            ];
-        } else {
-            // For instrument selector: instrument families
-            innerItems = ["Strings", "Woodwind", "Brass", "Keyboard", "Percussion", "Electronic"];
-            innerColors = ["#90EE90", "#ADFF2F", "#FFD700", "#FFA07A", "#87CEFA", "#DDA0DD"];
-            
-            // Specific instruments for outer ring
-            outerItems = ["Piano", "Guitar", "Violin", "Flute", "Drum", "Trumpet", "Sax", "Bass"];
-            outerColors = ["#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1", "#FFB6C1"];
-        }
-        
-        // Create the inner ring segments
-        this._createRingSegments(svg, centerX, centerY, 0, innerRadius, innerItems, innerColors, (value) => {
-            this.value = value;
-            this.text.text = value;
-            this.updateCache();
-            wheelDiv.style.display = "none";
-            this._piemenuExitTime = new Date().getTime();
-        });
-        
-        // Create the outer ring segments
-        this._createRingSegments(svg, centerX, centerY, innerRadius, outerRadius, outerItems, outerColors, (value) => {
-            // For accidentals and octaves, just update the value directly
-            if (value === "♮" || value === "♯" || value === "♭" || value === "𝄪" || value === "𝄫") {
-                // Handle accidentals for pitch blocks
-                if (this.name === "pitch") {
-                    // Update the accidental of the pitch
-                    this.value = this.value ? this.value + value : value;
-                } else {
-                    this.value = value;
-                }
-            } else if (!isNaN(value)) {
-                // Handle octave numbers
-                if (this.name === "pitch") {
-                    // For pitch blocks, need to set the octave in a connected number block
-                    const cblk2 = this.connections[2];
-                    if (cblk2 != null) {
-                        this.blocks.blockList[cblk2].value = parseInt(value);
-                        this.blocks.blockList[cblk2].text.text = value;
-                        this.blocks.blockList[cblk2].updateCache();
-                    }
-                } else {
-                    this.value = value;
-                }
+            console.log("Showing instrument selector for", this.name);
+            // Safety check to make sure the function is defined
+            if (typeof instrumentSelectorD3 === 'function') {
+                instrumentSelectorD3(this.activity, this);
+            } else if (window.instrumentSelectorD3) {
+                window.instrumentSelectorD3(this.activity, this);
             } else {
-                // For instruments or other values
-                this.value = value;
+                console.error("instrumentSelectorD3 function not defined!");
+            }
+        }
+        
+        // Add a mutation observer to ensure wheelDiv stays visible
+        if (wheelDiv) {
+            // Remove any existing observer
+            if (this._wheelObserver) {
+                this._wheelObserver.disconnect();
+                this._wheelObserver = null;
             }
             
-            this.text.text = this.value;
-            this.updateCache();
-            wheelDiv.style.display = "none";
-            this._piemenuExitTime = new Date().getTime();
-        });
-        
-        // Add a center circle with close button
-        const centerCircle = document.createElementNS(svgNS, "circle");
-        centerCircle.setAttribute("cx", centerX);
-        centerCircle.setAttribute("cy", centerY);
-        centerCircle.setAttribute("r", 50);
-        centerCircle.setAttribute("fill", "white");
-        centerCircle.setAttribute("stroke", "#ccc");
-        centerCircle.setAttribute("stroke-width", "2");
-        
-        // Add close functionality to center circle
-        centerCircle.onmouseover = function() {
-            this.setAttribute("fill", "#f5f5f5");
-        };
-        centerCircle.onmouseout = function() {
-            this.setAttribute("fill", "white");
-        };
-        centerCircle.onclick = () => {
-            wheelDiv.style.display = "none";
-            this._piemenuExitTime = new Date().getTime();
-        };
-        
-        svg.appendChild(centerCircle);
-        
-        // Add "Close" text to center circle
-        const closeText = document.createElementNS(svgNS, "text");
-        closeText.setAttribute("x", centerX);
-        closeText.setAttribute("y", centerY);
-        closeText.setAttribute("text-anchor", "middle");
-        closeText.setAttribute("dominant-baseline", "middle");
-        closeText.setAttribute("font-size", "14");
-        closeText.textContent = "×";
-        svg.appendChild(closeText);
-        
-        // Add the SVG to the wheel div
-        wheelDiv.appendChild(svg);
-    }
-    
-    /**
-     * Helper method to create ring segments for the placeholder
-     * @private
-     * @param {SVGElement} svg - The SVG element
-     * @param {number} centerX - X coordinate of center
-     * @param {number} centerY - Y coordinate of center
-     * @param {number} innerRadius - Inner radius of the ring
-     * @param {number} outerRadius - Outer radius of the ring
-     * @param {Array<string>} items - Labels for the segments
-     * @param {Array<string>} colors - Colors for the segments
-     * @param {Function} onClick - Click handler for segments
-     */
-    _createRingSegments(svg, centerX, centerY, innerRadius, outerRadius, items, colors, onClick) {
-        const svgNS = "http://www.w3.org/2000/svg";
-        const segmentCount = items.length;
-        
-        for (let i = 0; i < segmentCount; i++) {
-            const startAngle = (i / segmentCount) * 2 * Math.PI;
-            const endAngle = ((i + 1) / segmentCount) * 2 * Math.PI;
+            // Create a new observer to monitor style changes
+            this._wheelObserver = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                        if (wheelDiv.style.display === 'none' && 
+                            (!this._piemenuExitTime || new Date().getTime() - this._piemenuExitTime > 500)) {
+                            // If wheel was hidden but not by the exit function, make it visible again
+                            console.log('wheelDiv was hidden - restoring visibility');
+                            wheelDiv.style.display = '';
+                        }
+                    }
+                });
+            });
             
-            const innerStartX = centerX + innerRadius * Math.cos(startAngle);
-            const innerStartY = centerY + innerRadius * Math.sin(startAngle);
-            const innerEndX = centerX + innerRadius * Math.cos(endAngle);
-            const innerEndY = centerY + innerRadius * Math.sin(endAngle);
+            // Start observing
+            this._wheelObserver.observe(wheelDiv, { attributes: true, attributeFilter: ['style'] });
             
-            const outerStartX = centerX + outerRadius * Math.cos(startAngle);
-            const outerStartY = centerY + outerRadius * Math.sin(startAngle);
-            const outerEndX = centerX + outerRadius * Math.cos(endAngle);
-            const outerEndY = centerY + outerRadius * Math.sin(endAngle);
-            
-            const path = document.createElementNS(svgNS, "path");
-            const largeArcFlag = endAngle - startAngle > Math.PI ? 1 : 0;
-            
-            const d = [
-                "M", innerStartX, innerStartY,
-                "L", outerStartX, outerStartY,
-                "A", outerRadius, outerRadius, 0, largeArcFlag, 1, outerEndX, outerEndY,
-                "L", innerEndX, innerEndY,
-                "A", innerRadius, innerRadius, 0, largeArcFlag, 0, innerStartX, innerStartY,
-                "Z"
-            ].join(" ");
-            
-            path.setAttribute("d", d);
-            path.setAttribute("fill", colors[i] || "#ccc");
-            path.setAttribute("stroke", "white");
-            path.setAttribute("stroke-width", "1");
-            
-            // Calculate position for label
-            const labelAngle = (startAngle + endAngle) / 2;
-            const labelRadius = (innerRadius + outerRadius) / 2;
-            const labelX = centerX + labelRadius * Math.cos(labelAngle);
-            const labelY = centerY + labelRadius * Math.sin(labelAngle);
-            
-            // Add label
-            const text = document.createElementNS(svgNS, "text");
-            text.setAttribute("x", labelX);
-            text.setAttribute("y", labelY);
-            text.setAttribute("text-anchor", "middle");
-            text.setAttribute("dominant-baseline", "middle");
-            text.setAttribute("font-size", "14");
-            text.setAttribute("font-weight", "bold");
-            text.setAttribute("fill", "#333");
-            // Rotate the text to align with segment
-            text.setAttribute("transform", 
-                `rotate(${(labelAngle * 180 / Math.PI) + (labelAngle > Math.PI ? 180 : 0)}, ${labelX}, ${labelY})`);
-            text.textContent = items[i];
-            
-            // Make it interactive
-            path.onmouseover = function() {
-                this.setAttribute("opacity", "0.8");
-                this.setAttribute("stroke-width", "2");
-            };
-            path.onmouseout = function() {
-                this.setAttribute("opacity", "1");
-                this.setAttribute("stroke-width", "1");
-            };
-            path.onclick = () => onClick(items[i]);
-            
-            svg.appendChild(path);
-            svg.appendChild(text);
+            // Disconnect after a reasonable time
+            setTimeout(() => {
+                if (this._wheelObserver) {
+                    this._wheelObserver.disconnect();
+                    this._wheelObserver = null;
+                }
+            }, 10000);
         }
     }
 }

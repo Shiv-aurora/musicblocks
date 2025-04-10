@@ -72,57 +72,57 @@ function instrumentSelectorD3(activity, block) {
           {
             name: "String",
             children: [
-              { name: "Violin", value: 1 },
-              { name: "Viola", value: 1 },
-              { name: "Cello", value: 1 },
-              { name: "Bass", value: 1 },
-              { name: "Double Bass", value: 1 },
-              { name: "Guitar", value: 1 },
-              { name: "Acoustic Guitar", value: 1 },
-              { name: "Electric Guitar", value: 1 },
-              { name: "Banjo", value: 1 },
-              { name: "Dulcimer", value: 1 },
-              { name: "Koto", value: 1 }
+              { name: "Violin", value: 1, icon: "images/voices.svg" },
+              { name: "Viola", value: 1, icon: "images/voices.svg" },
+              { name: "Cello", value: 1, icon: "images/voices.svg" },
+              { name: "Bass", value: 1, icon: "images/voices.svg" },
+              { name: "Double Bass", value: 1, icon: "images/voices.svg" },
+              { name: "Guitar", value: 1, icon: "images/voices.svg" },
+              { name: "Acoustic Guitar", value: 1, icon: "images/voices.svg" },
+              { name: "Electric Guitar", value: 1, icon: "images/voices.svg" },
+              { name: "Banjo", value: 1, icon: "images/voices.svg" },
+              { name: "Dulcimer", value: 1, icon: "images/voices.svg" },
+              { name: "Koto", value: 1, icon: "images/voices.svg" }
             ]
           },
           {
             name: "Woodwind",
             children: [
-              { name: "Flute", value: 1 },
-              { name: "Clarinet", value: 1 },
-              { name: "Saxophone", value: 1 },
-              { name: "Oboe", value: 1 },
-              { name: "Bassoon", value: 1 }
+              { name: "Flute", value: 1, icon: "images/voices.svg" },
+              { name: "Clarinet", value: 1, icon: "images/voices.svg" },
+              { name: "Saxophone", value: 1, icon: "images/voices.svg" },
+              { name: "Oboe", value: 1, icon: "images/voices.svg" },
+              { name: "Bassoon", value: 1, icon: "images/voices.svg" }
             ]
           },
           {
             name: "Brass",
             children: [
-              { name: "Trumpet", value: 1 },
-              { name: "Trombone", value: 1 },
-              { name: "Tuba", value: 1 }
+              { name: "Trumpet", value: 1, icon: "images/voices.svg" },
+              { name: "Trombone", value: 1, icon: "images/voices.svg" },
+              { name: "Tuba", value: 1, icon: "images/voices.svg" }
             ]
           },
           {
             name: "Keyboard",
             children: [
-              { name: "Piano", value: 1 },
-              { name: "Celeste", value: 1 }
+              { name: "Piano", value: 1, icon: "images/voices.svg" },
+              { name: "Celeste", value: 1, icon: "images/voices.svg" }
             ]
           },
           {
             name: "Percussion",
             children: [
-              { name: "Xylophone", value: 1 },
-              { name: "Vibraphone", value: 1 },
-              { name: "Triangle", value: 1 },
-              { name: "Snare", value: 1 }
+              { name: "Xylophone", value: 1, icon: "images/8_bellset_key_6.svg" },
+              { name: "Vibraphone", value: 1, icon: "images/synth.svg" },
+              { name: "Triangle", value: 1, icon: "images/trianglebell.svg" },
+              { name: "Snare", value: 1, icon: "images/snaredrum.svg" }
             ]
           },
           {
             name: "Electronic",
             children: [
-              { name: "Electronic Synth", value: 1 }
+              { name: "Electronic Synth", value: 1, icon: "images/synth.svg" }
             ]
           }
         ]
@@ -162,25 +162,25 @@ function instrumentSelectorD3(activity, block) {
             console.log("Creating D3 sunburst visualization");
             
             // Add a close button
-        const closeBtn = document.createElement("button");
-        closeBtn.textContent = "×";
-        closeBtn.style.position = "absolute";
+            const closeBtn = document.createElement("button");
+            closeBtn.textContent = "×";
+            closeBtn.style.position = "absolute";
             closeBtn.style.right = "15px";
             closeBtn.style.top = "15px";
-        closeBtn.style.background = "white";
+            closeBtn.style.background = "white";
             closeBtn.style.border = "1px solid #e0e0e0";
             closeBtn.style.borderRadius = "4px";
             closeBtn.style.width = "26px";
             closeBtn.style.height = "26px";
             closeBtn.style.fontSize = "18px";
             closeBtn.style.lineHeight = "18px";
-        closeBtn.style.cursor = "pointer";
-        closeBtn.style.zIndex = "1100";
+            closeBtn.style.cursor = "pointer";
+            closeBtn.style.zIndex = "1100";
             closeBtn.style.color = "#444";
             closeBtn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
             closeBtn.style.fontFamily = "var(--mono_fonts, 'Menlo', 'Consolas', monospace)";
-        closeBtn.addEventListener("click", exitMenu);
-        wheelDiv.appendChild(closeBtn);
+            closeBtn.addEventListener("click", exitMenu);
+            wheelDiv.appendChild(closeBtn);
         
             // Define dimensions for the sunburst
             const width = 500;
@@ -254,21 +254,435 @@ function instrumentSelectorD3(activity, block) {
                 .style("filter", "drop-shadow(0 0 2px rgba(0,0,0,0.05))")
                 .on("click", clicked);
 
-            // Add title tooltips to the arcs
-            path.append("title").text(d => d.data.name);
+            // Create tooltips for instrument hover with improved styling
+            const tooltip = d3.select(wheelDiv)
+                .append("div")
+                .attr("class", "instrument-tooltip")
+                .style("position", "fixed")
+                .style("visibility", "hidden")
+                .style("background", "rgba(255, 255, 255, 0.95)")
+                .style("padding", "8px 12px")
+                .style("border-radius", "6px")
+                .style("box-shadow", "0 3px 10px rgba(0,0,0,0.4)")
+                .style("pointer-events", "none")
+                .style("z-index", "1500")
+                .style("font-size", "14px")
+                .style("font-weight", "bold")
+                .style("color", "#333")
+                .style("transition", "all 0.12s ease")
+                .style("opacity", "0")
+                .style("border", "1px solid rgba(0,0,0,0.1)");
 
-            // Add text labels with better styling
-            const label = svg.append("g")
+            // Add mouseover and mouseout events for tooltips with improved hover
+            path
+                .on("mouseover", function(event, d) {
+                    if (d.depth === 2) { // Only for leaf nodes (instruments)
+                        const icon = getInstrumentIcon(d.data.name);
+                        const instrumentLower = d.data.name.toLowerCase();
+                        const hasCustomImage = needsCustomImage(d.data.name);
+                        const needsCustomIcon = icon === "🔴" && !hasCustomImage;
+                        
+                        // Special case for trombone and tuba to highlight them differently
+                        const isSpecialCase = instrumentLower === 'trombone' || instrumentLower === 'tuba';
+                        
+                        let tooltipContent = `
+                            <div style="display:flex;align-items:center;">
+                                <span style="font-size:34px;margin-right:10px;">${icon}</span>
+                                <span>${d.data.name}</span>
+                                ${needsCustomIcon ? '<span style="color:#e74c3c;margin-left:8px;">(needs custom icon)</span>' : ''}
+                            </div>
+                        `;
+                        
+                        // Add extra explanation for trombone and tuba
+                        if (instrumentLower === 'trombone') {
+                            tooltipContent += `<div style="margin-top:4px;font-size:12px;color:#666;">Using trumpet emoji temporarily</div>`;
+                        } else if (instrumentLower === 'tuba') {
+                            tooltipContent += `<div style="margin-top:4px;font-size:12px;color:#666;">Using postal horn emoji temporarily</div>`;
+                        }
+                        
+                        tooltip
+                            .html(tooltipContent)
+                            .style("visibility", "visible")
+                            .style("opacity", "1")
+                            .style("left", `${event.clientX + 15}px`)
+                            .style("top", `${event.clientY - 35}px`);
+                            
+                        // Highlight the segment with a different style for instruments that need custom icons
+                        d3.select(this)
+                            .style("stroke", isSpecialCase ? "#ffd700" : "#fff") // Gold border for special cases
+                            .style("stroke-width", needsCustomIcon ? "3px" : (isSpecialCase ? "2.5px" : "2px"))
+                            .style("filter", "drop-shadow(0 0 4px rgba(0,0,0,0.2))")
+                            .style("opacity", "1");
+                            
+                        // Enhance the glow effect for the current instrument
+                        const currentIcon = icons.filter(icon => icon.data.name === d.data.name);
+                        currentIcon.select("circle")
+                            .transition()
+                            .duration(200)
+                            .attr("r", 17)
+                            .attr("fill-opacity", 0.6)
+                            .attr("filter", "blur(4px)");
+                    }
+                })
+                .on("mousemove", function(event) {
+                    tooltip
+                        .style("left", `${event.clientX + 15}px`)
+                        .style("top", `${event.clientY - 35}px`);
+                })
+                .on("mouseout", function(event, d) {
+                    tooltip
+                        .style("visibility", "hidden")
+                        .style("opacity", "0");
+                        
+                    // Reset highlight
+                    d3.select(this)
+                        .style("stroke", "#fff")
+                        .style("stroke-width", "0.5px")
+                        .style("filter", "drop-shadow(0 0 2px rgba(0,0,0,0.05))");
+                        
+                    // Reset the glow effect
+                    if (d.depth === 2) {
+                        const currentIcon = icons.filter(icon => icon.data.name === d.data.name);
+                        currentIcon.select("circle")
+                            .transition()
+                            .duration(200)
+                            .attr("r", 15)
+                            .attr("fill-opacity", 0.4)
+                            .attr("filter", "blur(3px)");
+                    }
+                });
+
+            // Add icons instead of text for instruments (leaf nodes) with hover effect
+            const icons = svg.append("g")
+                .attr("pointer-events", "none")
+                .selectAll("g")
+                .data(root.descendants().filter(d => d.depth === 2)) // Only for leaf nodes (instruments)
+                .join("g")
+                .attr("transform", d => {
+                    const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
+                    const y = (d.y0 + d.y1) / 2 * radius;
+                    return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+                });
+
+            // Add emoji icons as text elements with larger size and additional styling
+            icons.each(function(d) {
+                const g = d3.select(this);
+                const instrument = d.data.name;
+                const instrumentLower = instrument.toLowerCase();
+
+                // First, add a white glow circle behind each icon
+                g.append("circle")
+                    .attr("r", 15)
+                    .attr("fill", "white")
+                    .attr("fill-opacity", 0.4)
+                    .attr("filter", "blur(3px)")
+                    .style("pointer-events", "none");
+
+                if (instrumentLower === 'xylophone') {
+                    // Create an image element for xylophone (using custom image now)
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Xylophone.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'cello') {
+                    // Create an image element for cello
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/cello.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'acoustic guitar') {
+                    // Create an image element for acoustic guitar
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/acoustic-guitar.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'double bass') {
+                    // Create an image element for double bass
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/double-bass.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'bass') {
+                    // Create an image element for bass (using double bass image)
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/double-bass.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'sitar') {
+                    // Create an image element for sitar
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/sitar.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'koto') {
+                    // Create an image element for koto
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/koto.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'dulcimer') {
+                    // Create an image element for dulcimer
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/dulcimer.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'ukulele') {
+                    // Create an image element for ukulele
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/ukulele.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'harmonium') {
+                    // Create an image element for harmonium
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Harmonium.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'clarinet') {
+                    // Create an image element for clarinet
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/clarinet.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'oboe') {
+                    // Create an image element for oboe
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/ Oboe.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'bassoon') {
+                    // Create an image element for bassoon
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Bassoon.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'trombone') {
+                    // Create an image element for trombone
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Trombone.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'tuba') {
+                    // Create an image element for tuba
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/tuba.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'celeste') {
+                    // Create an image element for celeste
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Celeste.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'organ') {
+                    // Create an image element for organ
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/organ.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'vibraphone') {
+                    // Create an image element for vibraphone
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Vibraphone.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'marimba') {
+                    // Create an image element for marimba
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Marimba.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'triangle') {
+                    // Create an image element for triangle
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/triangle.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'hi hat' || instrumentLower === 'hi-hat') {
+                    // Create an image element for hi-hat
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Hi-Hat.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'cymbal') {
+                    // Create an image element for cymbal
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Cymbal.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'ride cymbal') {
+                    // Create an image element for ride cymbal
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Ride-Cymba.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'gong') {
+                    // Create an image element for gong
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/gong.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'tambourine') {
+                    // Create an image element for tambourine
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Tambourine.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'woodblock') {
+                    // Create an image element for woodblock
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Woodblock.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else if (instrumentLower === 'maracas') {
+                    // Create an image element for maracas
+                    g.append("svg:image")
+                        .attr("xlink:href", "images/instruments/Maracas.png")
+                        .attr("width", 34)
+                        .attr("height", 34)
+                        .attr("x", -17)
+                        .attr("y", -17)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                } else {
+                    // For default emojis, use a foreignObject with HTML div for better emoji rendering
+                    const foreignObject = g.append("foreignObject")
+                        .attr("width", 38)
+                        .attr("height", 38)
+                        .attr("x", -19)
+                        .attr("y", -19)
+                        .attr("fill-opacity", labelVisible(d.current) ? 1 : 0)
+                        .style("pointer-events", "none");
+                        
+                    foreignObject.append("xhtml:div")
+                        .style("width", "100%")
+                        .style("height", "100%") 
+                        .style("display", "flex")
+                        .style("align-items", "center")
+                        .style("justify-content", "center")
+                        .style("font-size", "34px") // Reduced to 34px to match custom images exactly
+                        .style("user-select", "none")
+                        .style("filter", "drop-shadow(0 1px 1px rgba(0,0,0,0.2))")
+                        .html(getInstrumentIcon(instrument));
+                }
+            });
+
+            // Add text labels for categories (not instruments)
+            const labels = svg.append("g")
                 .attr("pointer-events", "none")
                 .attr("text-anchor", "middle")
                 .style("user-select", "none")
                 .selectAll("text")
-                .data(root.descendants().slice(1))
+                .data(root.descendants().filter(d => d.depth === 1)) // Only for category nodes
                 .join("text")
                 .attr("dy", "0.35em")
                 .attr("fill-opacity", d => +labelVisible(d.current))
                 .attr("transform", d => labelTransform(d.current))
-                .attr("class", d => d.depth === 1 ? "observablehq--keyword" : "observablehq--string")
+                .attr("class", "observablehq--keyword")
                 .text(d => d.data.name);
 
             // Add the center circle for zooming out
@@ -375,9 +789,30 @@ function instrumentSelectorD3(activity, block) {
                     .attr("pointer-events", d => arcVisible(d.target) ? "auto" : "none")
                     .attrTween("d", d => () => arc(d.current));
                     
-                label.transition(t)
+                // Transition the labels
+                labels.transition(t)
                     .attr("fill-opacity", d => +labelVisible(d.target))
                     .attrTween("transform", d => () => labelTransform(d.current));
+                
+                // Transition the icons
+                icons.transition(t)
+                    .attr("fill-opacity", d => +labelVisible(d.target))
+                    .attrTween("transform", d => {
+                        return () => {
+                            const x = (d.current.x0 + d.current.x1) / 2 * 180 / Math.PI;
+                            const y = (d.current.y0 + d.current.y1) / 2 * radius;
+                            return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+                        };
+                    });
+
+                // Also update the icon content opacity during transitions
+                icons.selectAll("text, image, circle, foreignObject").transition(t)
+                    .attr("fill-opacity", d => {
+                        if (d.data && d.data.name) {
+                            return labelVisible(d.target) ? 1 : 0;
+                        }
+                        return 0;
+                    });
             }
 
             // Helper function to determine if an arc is visible
@@ -395,6 +830,170 @@ function instrumentSelectorD3(activity, block) {
                 const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
                 const y = (d.y0 + d.y1) / 2 * radius;
                 return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+            }
+
+            // Helper function to get instrument icon
+            function getInstrumentIcon(instrument) {
+                // Convert instrument name to lowercase for comparison
+                const name = instrument.toLowerCase();
+                
+                // Give each instrument a unique emoji with exact matches where possible
+                // Use 🔴 for instruments without an exact emoji match
+                
+                // String instruments
+                if (name === 'violin') {
+                    return "🎻"; // Violin emoji - exact match
+                } else if (name === 'viola') {
+                    return "🎻"; // Using violin emoji for viola as requested
+                } else if (name === 'cello') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'double bass') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'bass') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'electric guitar') {
+                    return "🎸"; // Guitar emoji - exact match
+                } else if (name === 'acoustic guitar') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'guitar') {
+                    return "🎸"; // Guitar emoji - exact match
+                } else if (name === 'banjo') {
+                    return "🪕"; // Banjo emoji - exact match
+                } else if (name === 'sitar') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'koto') {
+                    return "🔴"; // No exact emoji match - as requested
+                } else if (name === 'dulcimer') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'ukulele') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'harmonium') {
+                    return "🔴"; // No exact emoji match
+                } 
+                
+                // Wind instruments
+                else if (name === 'flute') {
+                    return "🪈"; // Flute emoji - exact match
+                } else if (name === 'clarinet') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'saxophone') {
+                    return "🎷"; // Saxophone emoji - exact match
+                } else if (name === 'oboe') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'bassoon') {
+                    return "🔴"; // No exact emoji match
+                } 
+                
+                // Brass instruments
+                else if (name === 'trumpet') {
+                    return "🎺"; // Trumpet emoji - exact match
+                } else if (name === 'trombone') {
+                    return "🎺"; // Using trumpet emoji with a subtitle
+                } else if (name === 'tuba') {
+                    return "📯"; // Postal horn emoji - closest to tuba
+                } 
+                
+                // Keyboard instruments
+                else if (name === 'piano') {
+                    return "🎹"; // Piano emoji - exact match
+                } else if (name === 'celeste') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'harpsichord') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'organ') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'accordion') {
+                    return "🪗"; // Accordion emoji - exact match
+                } 
+                
+                // Percussion instruments
+                else if (name === 'xylophone') {
+                    return "🔴"; // No emoji - we'll use a custom image instead
+                } else if (name === 'vibraphone') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'marimba') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'triangle') {
+                    return "📐"; // Triangle ruler - closest to musical triangle
+                } else if (name === 'bass drum' || name === 'kick drum') {
+                    return "🥁"; // Drum emoji
+                } else if (name === 'snare drum') {
+                    return "🥁"; // Drum emoji
+                } else if (name === 'snare') {
+                    return "🥁"; // Drum emoji
+                } else if (name === 'tom tom' || name === 'tom-tom') {
+                    return "🥁"; // Drum emoji
+                } else if (name === 'hi hat' || name === 'hi-hat') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'cymbal') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'ride cymbal') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'crash cymbal') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'bell') {
+                    return "🔔"; // Bell emoji - exact match
+                } else if (name === 'cowbell') {
+                    return "🔔"; // Bell emoji (close enough)
+                } else if (name === 'gong') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'tambourine') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'woodblock') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'maracas') {
+                    return "🔴"; // No exact emoji match
+                } else if (name === 'drum' || name === 'drums') {
+                    return "🥁"; // Drum emoji - exact match
+                }
+                
+                // Voice
+                else if (name === 'soprano') {
+                    return "🎤"; // Microphone - used for all voices
+                } else if (name === 'alto') {
+                    return "🎤"; // Microphone
+                } else if (name === 'tenor') {
+                    return "🎤"; // Microphone
+                } else if (name === 'bass voice') {
+                    return "🎤"; // Microphone
+                } else if (name === 'voice') {
+                    return "🎤"; // Microphone emoji - for voice
+                }
+                
+                // Electronic instruments
+                else if (name === 'electronic synth') {
+                    return "🎛️"; // Control knobs - appropriate for synth
+                } else if (name === 'electronic') {
+                    return "🎛️"; // Control knobs
+                } else if (name === 'synthesizer') {
+                    return "🎛️"; // Control knobs
+                } else if (name === 'sine') {
+                    return "〰️"; // Wavy dash - looks like sine wave
+                } else if (name === 'square') {
+                    return "⬜"; // White square - like square wave
+                } else if (name === 'sawtooth') {
+                    return "⚡"; // Lightning - similar to sawtooth shape
+                } else if (name === 'triangle wave') {
+                    return "🔼"; // Up-pointing triangle
+                }
+                
+                // Default for unknown instruments
+                return "🔴";
+            }
+
+            // Helper function to check if instrument needs custom image
+            function needsCustomImage(instrument) {
+                const name = instrument.toLowerCase();
+                return name === 'xylophone' || name === 'cello' || 
+                       name === 'acoustic guitar' || name === 'double bass' || 
+                       name === 'bass' || name === 'sitar' || name === 'koto' || name === 'dulcimer' ||
+                       name === 'ukulele' || name === 'harmonium' || name === 'clarinet' ||
+                       name === 'oboe' || name === 'bassoon' || name === 'trombone' ||
+                       name === 'tuba' || name === 'celeste' || name === 'organ' ||
+                       name === 'vibraphone' || name === 'marimba' || name === 'triangle' ||
+                       name === 'hi hat' || name === 'hi-hat' || name === 'cymbal' ||
+                       name === 'ride cymbal' || name === 'gong' || name === 'tambourine' ||
+                       name === 'woodblock' || name === 'maracas';
             }
         } catch (error) {
             console.error("Error creating D3 sunburst:", error);
