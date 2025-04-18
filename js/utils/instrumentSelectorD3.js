@@ -162,25 +162,25 @@ function instrumentSelectorD3(activity, block) {
             console.log("Creating D3 sunburst visualization");
             
             // Add a close button
-            const closeBtn = document.createElement("button");
-            closeBtn.textContent = "×";
-            closeBtn.style.position = "absolute";
+        const closeBtn = document.createElement("button");
+        closeBtn.textContent = "×";
+        closeBtn.style.position = "absolute";
             closeBtn.style.right = "15px";
             closeBtn.style.top = "15px";
-            closeBtn.style.background = "white";
+        closeBtn.style.background = "white";
             closeBtn.style.border = "1px solid #e0e0e0";
             closeBtn.style.borderRadius = "4px";
             closeBtn.style.width = "26px";
             closeBtn.style.height = "26px";
             closeBtn.style.fontSize = "18px";
             closeBtn.style.lineHeight = "18px";
-            closeBtn.style.cursor = "pointer";
-            closeBtn.style.zIndex = "1100";
+        closeBtn.style.cursor = "pointer";
+        closeBtn.style.zIndex = "1100";
             closeBtn.style.color = "#444";
             closeBtn.style.boxShadow = "0 1px 3px rgba(0,0,0,0.1)";
             closeBtn.style.fontFamily = "var(--mono_fonts, 'Menlo', 'Consolas', monospace)";
-            closeBtn.addEventListener("click", exitMenu);
-            wheelDiv.appendChild(closeBtn);
+        closeBtn.addEventListener("click", exitMenu);
+        wheelDiv.appendChild(closeBtn);
         
             // Define dimensions for the sunburst
             const width = 500;
@@ -361,7 +361,8 @@ function instrumentSelectorD3(activity, block) {
                 .attr("transform", d => {
                     const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
                     const y = (d.y0 + d.y1) / 2 * radius;
-                    return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+                    // Apply the rotation to position the icon, then counter-rotate to keep it upright
+                    return `rotate(${x - 90}) translate(${y},0) rotate(${90 - x})`;
                 });
 
             // Add emoji icons as text elements with larger size and additional styling
@@ -801,7 +802,8 @@ function instrumentSelectorD3(activity, block) {
                         return () => {
                             const x = (d.current.x0 + d.current.x1) / 2 * 180 / Math.PI;
                             const y = (d.current.y0 + d.current.y1) / 2 * radius;
-                            return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+                            // Apply the rotation to position the icon, then counter-rotate to keep it upright
+                            return `rotate(${x - 90}) translate(${y},0) rotate(${90 - x})`;
                         };
                     });
 
